@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: insurance-rag-config
+data:
+  LLAMA_SERVER_URL: "http://host.minikube.internal:8080/completion"

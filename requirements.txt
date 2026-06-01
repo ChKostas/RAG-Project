@@ -1,0 +1,13 @@
+python-dotenv
+tqdm
+requests
+gradio==5.31.0
+langchain-core
+langchain-text-splitters
+langchain-huggingface
+langchain-community
+chromadb
+sentence-transformers
+fastapi
+uvicorn
+pydantic

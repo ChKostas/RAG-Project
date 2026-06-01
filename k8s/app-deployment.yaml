@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-rag-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: insurance-rag-app
+  template:
+    metadata:
+      labels:
+        app: insurance-rag-app
+    spec:
+      initContainers:
+        - name: init-copy-db
+          image: insurance-rag-app:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              if [ -z "$(ls -A /app/preprocessed_db 2>/dev/null)" ]; then
+                echo "PVC is empty. Copying seed DB..."
+                cp -r /app/preprocessed_db_seed/* /app/preprocessed_db/
+              else
+                echo "PVC already contains data. Skipping copy."
+              fi
+          volumeMounts:
+            - name: rag-data
+              mountPath: /app/preprocessed_db
+
+      containers:
+        - name: insurance-rag-app
+          image: insurance-rag-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7860
+          env:
+            - name: LLAMA_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: insurance-rag-config
+                  key: LLAMA_SERVER_URL
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: rag-data
+              mountPath: /app/preprocessed_db
+
+      volumes:
+        - name: rag-data
+          persistentVolumeClaim:
+            claimName: rag-data-pvc
